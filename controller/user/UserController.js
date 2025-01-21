@@ -1,4 +1,3 @@
-//const UserServices = require("../../services/user/UserServices");
 const Student = require('../../models/schema');
 
 class UserController {

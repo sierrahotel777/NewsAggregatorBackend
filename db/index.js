@@ -1,7 +1,6 @@
 const { default: mongoose } = require('mongoose');
 const dotenv = require('dotenv');
 dotenv.config();
-//const Student = require('../models/schema');
 console.log('Environment Variable DB_URL:', process.env.DB_URL);
 const DB_URL = process.env.DB_URL;
 
