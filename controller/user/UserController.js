@@ -1,70 +1,97 @@
-const Student = require('../../models/schema');
+const User = require('../../models/schema');
+const UserServices = require('../../services/UserServices');
 
 class UserController {
-    async InputRecord(req, res) {
-        try {
-            const { inpdata } = req.body;
-            const newStudent = new Student(inpdata);
-            const savedStudent = await newStudent.save();
-            res.status(201).json({ message: 'Student inserted successfully', student: savedStudent });
-        } catch (error) {
-            console.error('Error inserting student:', error);
-            res.status(500).send('Internal Server Error');
-        }
-    }
+    async RegisterUser(req, res) {
+        console.log("Incoming request body:", req.body);
 
-    async GetRecord(req, res) {
-        try {
-            const students = await Student.find();
-            res.status(200).json({ students });
-        } catch (error) {
-            console.error('Error fetching students:', error);
-            res.status(500).send('Internal Server Error');
-        }
-    }
+        const { name, email, phone } = req.body;
+        console.log("Extracted phone number:", phone);
 
-    async GetRecordById(req, res) {
+        if (!name || !email || !phone) {
+            return res.status(400).json({ message: "Missing required fields" });
+        }
+
         try {
-            const { id } = req.params;
-            const student = await Student.findById(id);
-            if (!student) {
-                return res.status(404).json({ message: 'Student not found' });
+            const checkuser = await UserServices.CheckUser(phone);
+            if (checkuser) {
+                return res.status(409).json({ message: 'User Already Exists. Please Login' });
             }
-            res.status(200).json({ student });
+
+            const createuser = await UserServices.CreateUser({
+                name,
+                email,
+                mobileno: phone, // Ensure this matches the schema field name
+                otp: Math.floor(100000 + Math.random() * 900000).toString()
+            });
+
+            res.status(201).json({ message: 'User Created successfully', data: createuser });
         } catch (error) {
-            console.error('Error fetching student:', error);
-            res.status(500).send('Internal Server Error');
+            console.error('Error creating user:', error);
+            res.status(500).json({ message: 'Internal Server Error', error: error.message });
         }
     }
 
-    async UpdateRecordById(req, res) {
-        try {
-            const { id } = req.params;
-            const { grade } = req.body;
-            const updatedStudent = await Student.findByIdAndUpdate(id, { grade }, { new: true });
-            if (!updatedStudent) {
-                return res.status(404).json({ message: 'Student not found' });
-            }
-            res.status(200).json({ message: 'Student grade updated successfully', student: updatedStudent });
-        } catch (error) {
-            console.error('Error updating student:', error);
-            res.status(500).send('Internal Server Error');
+    async CheckUser(req, res) {
+        console.log("Incoming request body:", req.body);
+
+        const { phone } = req.body;
+
+        const validateuser = await UserServices.CheckUser(phone);
+        if (validateuser) {
+            res.status(200).send({ message: 'User Exists', data: validateuser });
+        }
+        else {
+            res.status(401).send({ message: 'User Not Found', data: [] });
+
         }
     }
 
-    async DeleteRecord(req, res) {
-        try {
-            const { id } = req.params;
-            const deletedStudent = await Student.findByIdAndDelete(id);
-            if (!deletedStudent) {
-                return res.status(404).json({ message: 'Student not found' });
-            }
-            res.status(200).json({ message: 'Student deleted successfully' });
-        } catch (error) {
-            console.error('Error deleting student:', error);
-            res.status(500).send('Internal Server Error');
+    async VerifyOTP(req, res) {
+        const Obj = req.body;
+        const validateuser = await UserServices.ValidateUserOTP(Obj.mobileno, Obj.otp);
+        if (validateuser) {
+            res.status(200).send({ message: 'User Validated Successfully', data: validateuser });
+        }
+        else {
+            res.status(401).send({ message: 'UnAuthorized', data: [] });
+
         }
     }
+    async UpdateProfile(req, res) {
+        const Obj = req.body;
+        const validateuser = await UserServices.CheckUserById(Obj?.id);
+        if (validateuser) {
+            const updateuser = await UserServices.UpdateUser({
+                id: Obj?.id,
+                updateobj: Obj?.data
+            });
+            if (updateuser) {
+                res.status(200).send({ message: 'User Updated Successfully', data: updateuser });
+            }
+            else {
+                res.status(401).send({ message: 'User Updation Failed', data: [] });
+            }
+
+        }
+        else {
+            res.status(401).send({ message: 'UnAuthorized', data: [] });
+
+        }
+    }
+    async GetProfileByID(req, res) {
+        const Obj = req.query;
+        const validateuser = await UserServices.CheckUserById(Obj?.id);
+        if (validateuser) {
+            res.status(200).send({ message: 'Success', data: validateuser });
+        }
+        else {
+            res.status(401).send({ message: 'UnAuthorized', data: [] });
+
+        }
+    }
+
 }
 
-module.exports = new UserController();
+const userController = new UserController();
+module.exports = userController;
