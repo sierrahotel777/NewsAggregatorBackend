@@ -21,7 +21,7 @@ class UserController {
             const createuser = await UserServices.CreateUser({
                 name,
                 email,
-                mobileno: phone, // Ensure this matches the schema field name
+                mobileno: phone,
                 otp: Math.floor(100000 + Math.random() * 900000).toString()
             });
 
@@ -54,7 +54,7 @@ class UserController {
             res.status(200).send({ message: 'User Validated Successfully', data: validateuser });
         }
         else {
-            res.status(401).send({ message: 'UnAuthorized', data: [] });
+            res.status(401).send({ message: 'Incorrect OTP', data: [] });
 
         }
     }
@@ -79,15 +79,36 @@ class UserController {
 
         }
     }
-    async GetProfileByID(req, res) {
-        const Obj = req.query;
-        const validateuser = await UserServices.CheckUserById(Obj?.id);
-        if (validateuser) {
-            res.status(200).send({ message: 'Success', data: validateuser });
-        }
-        else {
-            res.status(401).send({ message: 'UnAuthorized', data: [] });
+    async GetUser(req, res) {
+        try {
+            console.log("Incoming request body:", req.body);
+            const { mobileno } = req.body;
 
+            const validateuser = await UserServices.CheckUser(mobileno);
+            if (validateuser) {
+                const userData = {
+                    name: validateuser.name,
+                    profile: validateuser.profile,
+                    email: validateuser.email,
+                    mobileno: validateuser.mobileno,
+                    bio: validateuser.bio,
+                };
+                res.status(200).json({
+                    message: 'Success',
+                    data: userData
+                });
+            } else {
+                res.status(401).json({
+                    message: 'UnAuthorized',
+                    data: []
+                });
+            }
+        } catch (error) {
+            console.error('Error fetching user:', error);
+            res.status(500).json({
+                message: 'Internal Server Error',
+                error: error.message
+            });
         }
     }
 

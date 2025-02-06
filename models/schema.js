@@ -6,7 +6,7 @@ const userSchema = new Schema({
     profile: { type: String, default: 'null' },
     email: { type: String, required: true },
     mobileno: { type: String, required: true },
-    bio: { type: String },
+    bio: { type: String, default: 'Edit Your Bio Using Edit Profile' },
     otp: { type: String },
 }, { timestamps: true });
 

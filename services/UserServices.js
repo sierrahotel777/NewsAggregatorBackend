@@ -7,10 +7,6 @@ class UserService {
         return user;
     }
 
-    async CheckUserById(id) {
-        const user = await User.findOne({ _id: id });
-        return user;
-    }
 
     async ValidateUserOTP(mobileno, otp) {
         const user = await User.findOne({ mobileno: mobileno, otp: otp });
@@ -23,7 +19,6 @@ class UserService {
             if (existingUser) {
                 throw new Error(`User with mobile number ${userData.mobileno} already exists.`);
             }
-            // Create a new user
             const newUser = new User(userData);
             const savedUser = await newUser.save();
             return savedUser;
