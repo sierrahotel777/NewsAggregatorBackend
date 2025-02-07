@@ -30,13 +30,12 @@ class UserService {
 
     async UpdateUser(userData) {
         try {
-            const existingUser = await User.findById(userData.id);
+            const existingUser = await User.findOne({ mobileno: userData.mobileno });
             if (!existingUser) {
-                throw new Error(`User with ID ${userData.id} not exists.`);
+                throw new Error(`User with ID ${userData.mobileno} not exists.`);
             }
-            // Update the existing user with the provided update object
             const updatedUser = await User.findByIdAndUpdate(
-                userData.id,
+                existingUser.id,
                 userData.updateobj,
                 { new: true }
             );
@@ -48,7 +47,7 @@ class UserService {
             return updatedUser;
         } catch (error) {
             console.error('Error updating user:', error.message);
-            throw error; // Propagate the error for external handling
+            throw error;
         }
     }
 }

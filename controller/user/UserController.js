@@ -58,27 +58,49 @@ class UserController {
 
         }
     }
+
     async UpdateProfile(req, res) {
-        const Obj = req.body;
-        const validateuser = await UserServices.CheckUserById(Obj?.id);
-        if (validateuser) {
+        try {
+            console.log("Incoming request body:", req.body);
+            const { name, bio, email, mobileno } = req.body;
+
+            const validateuser = await UserServices.CheckUser(mobileno);
+            if (!validateuser) {
+                return res.status(401).json({
+                    message: 'UnAuthorized',
+                    data: []
+                });
+            }
+
             const updateuser = await UserServices.UpdateUser({
-                id: Obj?.id,
-                updateobj: Obj?.data
+                mobileno,
+                updateobj: {
+                    name,
+                    bio,
+                    email
+                }
             });
+
             if (updateuser) {
-                res.status(200).send({ message: 'User Updated Successfully', data: updateuser });
+                return res.status(200).json({
+                    message: 'User Updated Successfully',
+                    data: updateuser
+                });
+            } else {
+                return res.status(400).json({
+                    message: 'User Update Failed',
+                    data: []
+                });
             }
-            else {
-                res.status(401).send({ message: 'User Updation Failed', data: [] });
-            }
-
-        }
-        else {
-            res.status(401).send({ message: 'UnAuthorized', data: [] });
-
+        } catch (error) {
+            console.error('Error updating profile:', error);
+            return res.status(500).json({
+                message: 'Internal Server Error',
+                error: error.message
+            });
         }
     }
+
     async GetUser(req, res) {
         try {
             console.log("Incoming request body:", req.body);
